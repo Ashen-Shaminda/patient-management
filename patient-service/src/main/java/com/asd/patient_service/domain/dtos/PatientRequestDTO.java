@@ -20,7 +20,6 @@ public class PatientRequestDTO {
    private String address;
 
    @NotBlank(message = "Date of birth is required")
-   @Past
    private String dateOfBirth;
 
    @NotBlank(message = "Registered date is required")
