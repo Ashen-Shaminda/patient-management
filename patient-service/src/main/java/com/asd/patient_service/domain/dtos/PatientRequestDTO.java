@@ -2,6 +2,7 @@ package com.asd.patient_service.domain.dtos;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -19,9 +20,9 @@ public class PatientRequestDTO {
    private String address;
 
    @NotBlank(message = "Date of birth is required")
+   @Past
    private String dateOfBirth;
 
-   /*@NotBlank(groups = CreatePatientValidationGroup.class, message =
-           "Registered date is required")
-   private String registeredDate;*/
+   @NotBlank(message = "Registered date is required")
+   private String registeredDate;
 }
