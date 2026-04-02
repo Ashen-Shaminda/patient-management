@@ -3,6 +3,7 @@ package com.asd.patient_service.services.impl;
 import com.asd.patient_service.domain.dtos.PatientRequestDTO;
 import com.asd.patient_service.domain.dtos.PatientResponseDTO;
 import com.asd.patient_service.domain.entities.Patient;
+import com.asd.patient_service.exception.EmailAlreadyExistsException;
 import com.asd.patient_service.mappers.PatientMapper;
 import com.asd.patient_service.repositories.PatientRepository;
 import com.asd.patient_service.services.PatientService;
@@ -28,6 +29,9 @@ public class PatientServiceImpl implements PatientService {
 
    @Override
    public PatientResponseDTO createPatient(PatientRequestDTO patientRequestDTO) {
+      if (patientRepository.existsByEmail(patientRequestDTO.getEmail()))
+         throw new EmailAlreadyExistsException("Email already exists");
+
       Patient newPatient = patientRepository.save(patientMapper.toEntity(patientRequestDTO));
 
       return patientMapper.toDTO(newPatient);
