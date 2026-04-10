@@ -14,6 +14,6 @@ public interface PatientMapper {
    PatientResponseDTO toDTO(Patient patient);
 
    @Mapping(target = "dateOfBirth", source = "dateOfBirth", dateFormat = "yyyy-MM-dd")
-//   @Mapping(target = "registeredDate", source = "registeredDate", dateFormat = "yyyy-MM-dd")
+   @Mapping(target = "registeredDate", source = "registeredDate", dateFormat = "yyyy-MM-dd")
    Patient toEntity(PatientRequestDTO patientRequestDTO);
 }

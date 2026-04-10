@@ -1,8 +1,12 @@
 package com.asd.patient_service.domain.dtos;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
-@Data
+@Getter
+@Builder
+@AllArgsConstructor
 public class PatientResponseDTO {
    private String id;
 
