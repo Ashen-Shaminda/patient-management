@@ -1,0 +1,13 @@
+services:
+   billing-service:
+      image: billing-service:latest
+      ports:
+         - "4001:4001"
+         - "9001:9001"
+      networks:
+         - patient-management
+
+networks:
+   patient-management:
+      name: patient-management
+      driver: bridge
