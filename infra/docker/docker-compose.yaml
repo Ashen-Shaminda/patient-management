@@ -9,8 +9,18 @@ services:
          SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
          SPRING_JPA_HIBERNATE_DDL_AUTO: update
          SPRING_SQL_INIT_MODE: always
+         BILLING_SERVICE_ADDRESS: ${BILLING_SERVICE_ADDRESS}
+         BILLING_SERVICE_PORT: ${BILLING_SERVICE_PORT}
       depends_on:
          - postgres
+      networks:
+         - patient-management
+
+   billing-service:
+      image: billing-service:latest
+      ports:
+         - "4001:4001"
+         - "9001:9001"
       networks:
          - patient-management
 
