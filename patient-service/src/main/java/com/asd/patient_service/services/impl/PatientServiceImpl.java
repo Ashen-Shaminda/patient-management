@@ -6,6 +6,7 @@ import com.asd.patient_service.domain.entities.Patient;
 import com.asd.patient_service.exception.EmailAlreadyExistsException;
 import com.asd.patient_service.exception.PatientNotFoundException;
 import com.asd.patient_service.grpc.BillingServiceGrpcClient;
+import com.asd.patient_service.kafka.KafkaProducer;
 import com.asd.patient_service.mappers.PatientMapper;
 import com.asd.patient_service.repositories.PatientRepository;
 import com.asd.patient_service.services.PatientService;
@@ -20,11 +21,13 @@ public class PatientServiceImpl implements PatientService {
    private final PatientRepository patientRepository;
    private final PatientMapper patientMapper;
    private final BillingServiceGrpcClient billingServiceGrpcClient;
+   private final KafkaProducer kafkaProducer;
 
-   public PatientServiceImpl(PatientRepository patientRepository, PatientMapper patientMapper, BillingServiceGrpcClient billingServiceGrpcClient) {
+   public PatientServiceImpl(PatientRepository patientRepository, PatientMapper patientMapper, BillingServiceGrpcClient billingServiceGrpcClient, KafkaProducer kafkaProducer) {
       this.patientRepository = patientRepository;
       this.patientMapper = patientMapper;
       this.billingServiceGrpcClient = billingServiceGrpcClient;
+      this.kafkaProducer = kafkaProducer;
    }
 
    public List<PatientResponseDTO> getPatients() {
@@ -46,13 +49,14 @@ public class PatientServiceImpl implements PatientService {
               newPatient.getEmail()
       );
 
+      kafkaProducer.sendEvent(newPatient);
+
       return patientMapper.toDTO(newPatient);
    }
 
    @Override
    public PatientResponseDTO updatePatient(UUID id, PatientRequestDTO patientRequestDTO) {
-      Patient patient = patientRepository.findById(id).orElseThrow(() ->
-              new PatientNotFoundException("Patient not found with ID: " + id));
+      Patient patient = patientRepository.findById(id).orElseThrow(() -> new PatientNotFoundException("Patient not found with ID: " + id));
 
       if (patientRepository.existsByEmailAndIdNot(patientRequestDTO.getEmail(), id))
          throw new EmailAlreadyExistsException("A patient with this email " + patientRequestDTO.getEmail() + " already exists");
