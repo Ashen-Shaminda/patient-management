@@ -1,0 +1,82 @@
+services:
+   patient-service:
+      image: patient-service:latest
+      ports:
+         - "4000:4000"
+      environment:
+         SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/db
+         SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+         SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+         SPRING_JPA_HIBERNATE_DDL_AUTO: update
+         SPRING_SQL_INIT_MODE: always
+         BILLING_SERVICE_ADDRESS: ${BILLING_SERVICE_ADDRESS}
+         BILLING_SERVICE_PORT: ${BILLING_SERVICE_PORT}
+         SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      depends_on:
+         - postgres
+      networks:
+         - patient-management
+
+   billing-service:
+      image: billing-service:latest
+      ports:
+         - "4001:4001"
+         - "9001:9001"
+      networks:
+         - patient-management
+
+   postgres:
+      image: postgres:latest
+      restart: always
+      container_name: patient-service-db
+      environment:
+         POSTGRES_DB: ${POSTGRES_DB}
+         POSTGRES_USER: ${POSTGRES_USER}
+         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      ports:
+         - "5432:5432"
+      networks:
+         - patient-management
+      volumes:
+         - ~/Projects/postgres/patient_service_db:/var/lib/postgresql
+
+   kafka:
+      image: confluentinc/cp-kafka:latest
+      container_name: kafka
+      ports:
+         - "9092:9092"
+         - "9094:9094"
+      environment:
+         # === KRaft identity ===
+         KAFKA_NODE_ID: 1
+         KAFKA_PROCESS_ROLES: broker,controller
+         KAFKA_CLUSTER_ID: cmjvw3drc00002e6jmyi2t8wc
+         KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+         # === Listeners ===
+         KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+         KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+         KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+         KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+         KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+         # === Storage ===
+         KAFKA_LOG_DIRS: /var/lib/kafka/data
+
+         # === Single-node constraints ===
+         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+         KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+         KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      networks:
+         - patient-management
+      volumes:
+         - kafka_data:/var/lib/kafka/data
+
+volumes:
+   kafka_data:
+
+networks:
+   patient-management:
+      name: patient-management
+      driver: bridge
