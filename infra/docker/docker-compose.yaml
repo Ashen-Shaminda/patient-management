@@ -25,6 +25,15 @@ services:
       networks:
          - patient-management
 
+   analytics-service:
+      image: analytics-service:latest
+      ports:
+         - "4002:4002"
+      environment:
+            SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      networks:
+         - patient-management
+
    postgres:
       image: postgres:latest
       restart: always
