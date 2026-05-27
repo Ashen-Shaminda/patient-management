@@ -2,7 +2,7 @@ services:
    patient-service:
       image: patient-service:latest
       environment:
-         SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/db
+         SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5000/db
          SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
          SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
          SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -11,7 +11,7 @@ services:
          BILLING_SERVICE_PORT: ${BILLING_SERVICE_PORT}
          SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       depends_on:
-         - postgres
+         - patient-service-db
       networks:
          - patient-management
 
@@ -46,7 +46,7 @@ services:
       networks:
          - patient-management
 
-   postgres:
+   patient-service-db:
       image: postgres:latest
       restart: always
       container_name: patient-service-db
@@ -55,11 +55,26 @@ services:
          POSTGRES_USER: ${POSTGRES_USER}
          POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       ports:
-         - "5432:5432"
+         - "5000:5432"
       networks:
          - patient-management
       volumes:
          - ~/Projects/postgres/patient_service_db:/var/lib/postgresql
+
+   auth-service-db:
+      image: postgres:latest
+      restart: always
+      container_name: auth-service-db
+      environment:
+         POSTGRES_DB: ${POSTGRES_DB}
+         POSTGRES_USER: ${POSTGRES_USER}
+         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      ports:
+         - "5001:5432"
+      networks:
+         - patient-management
+      volumes:
+         - ~/Projects/postgres/auth_service_db:/var/lib/postgresql
 
    kafka:
       image: confluentinc/cp-kafka:latest
