@@ -1,118 +1,134 @@
 services:
-   patient-service:
-      image: patient-service:latest
-      environment:
-         SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5000/db
-         SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-         SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-         SPRING_JPA_HIBERNATE_DDL_AUTO: update
-         SPRING_SQL_INIT_MODE: always
-         BILLING_SERVICE_ADDRESS: ${BILLING_SERVICE_ADDRESS}
-         BILLING_SERVICE_PORT: ${BILLING_SERVICE_PORT}
-         SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      depends_on:
-         - patient-service-db
-      networks:
-         - patient-management
+  patient-service:
+    image: patient-service:latest
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5000/db
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_SQL_INIT_MODE: always
+      BILLING_SERVICE_ADDRESS: ${BILLING_SERVICE_ADDRESS}
+      BILLING_SERVICE_PORT: ${BILLING_SERVICE_PORT}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - patient-service-db
+    networks:
+      - patient-management
 
-   billing-service:
-      image: billing-service:latest
-      ports:
-         - "4001:4001"
-         - "9001:9001"
-      networks:
-         - patient-management
+  billing-service:
+    image: billing-service:latest
+    ports:
+      - "4001:4001"
+      - "9001:9001"
+    networks:
+      - patient-management
 
-   analytics-service:
-      image: analytics-service:latest
-      ports:
-         - "4002:4002"
-      environment:
-         SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      networks:
-         - patient-management
+  analytics-service:
+    image: analytics-service:latest
+    ports:
+      - "4002:4002"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    networks:
+      - patient-management
 
-   api-gateway:
-      image: api-gateway:latest
-      ports:
-         - "4004:4004"
-      #      environment:
-      #         SPRING_CLOUD_GATEWAY_RATESERVICE_URL: http://rate-limiter-service:4003
-      #      depends_on:
-      #         - patient-service
-      #         - billing-service
-      #         - analytics-service
-      #         - rate-limiter-service
-      networks:
-         - patient-management
+  auth-service:
+    image: auth-service:latest
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-service-db:5432/db
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_SQL_INIT_MODE: always
+    ports:
+      - "4005:4005"
+    depends_on:
+      - auth-service-db
+    networks:
+      - patient-management
 
-   patient-service-db:
-      image: postgres:latest
-      restart: always
-      container_name: patient-service-db
-      environment:
-         POSTGRES_DB: ${POSTGRES_DB}
-         POSTGRES_USER: ${POSTGRES_USER}
-         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      ports:
-         - "5000:5432"
-      networks:
-         - patient-management
-      volumes:
-         - ~/Projects/postgres/patient_service_db:/var/lib/postgresql
+  api-gateway:
+    image: api-gateway:latest
+    ports:
+      - "4004:4004"
+    #      environment:
+    #         SPRING_CLOUD_GATEWAY_RATESERVICE_URL: http://rate-limiter-service:4003
+    #      depends_on:
+    #         - patient-service
+    #         - billing-service
+    #         - analytics-service
+    #         - rate-limiter-service
+    networks:
+      - patient-management
 
-   auth-service-db:
-      image: postgres:latest
-      restart: always
-      container_name: auth-service-db
-      environment:
-         POSTGRES_DB: ${POSTGRES_DB}
-         POSTGRES_USER: ${POSTGRES_USER}
-         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      ports:
-         - "5001:5432"
-      networks:
-         - patient-management
-      volumes:
-         - ~/Projects/postgres/auth_service_db:/var/lib/postgresql
+  patient-service-db:
+    image: postgres:latest
+    restart: always
+    container_name: patient-service-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5000:5432"
+    networks:
+      - patient-management
+    volumes:
+      - ~/Projects/postgres/patient_service_db:/var/lib/postgresql
 
-   kafka:
-      image: confluentinc/cp-kafka:latest
-      container_name: kafka
-      ports:
-         - "9092:9092"
-         - "9094:9094"
-      environment:
-         # === KRaft identity ===
-         KAFKA_NODE_ID: 1
-         KAFKA_PROCESS_ROLES: broker,controller
-         KAFKA_CLUSTER_ID: cmjvw3drc00002e6jmyi2t8wc
-         KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+  auth-service-db:
+    image: postgres:latest
+    restart: always
+    container_name: auth-service-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5001:5432"
+    networks:
+      - patient-management
+    volumes:
+      - ~/Projects/postgres/auth_service_db:/var/lib/postgresql
 
-         # === Listeners ===
-         KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
-         KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
-         KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-         KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
-         KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    environment:
+      # === KRaft identity ===
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CLUSTER_ID: cmjvw3drc00002e6jmyi2t8wc
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
 
-         # === Storage ===
-         KAFKA_LOG_DIRS: /var/lib/kafka/data
+      # === Listeners ===
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
-         # === Single-node constraints ===
-         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-         KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-         KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # === Storage ===
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
 
-      networks:
-         - patient-management
-      volumes:
-         - kafka_data:/var/lib/kafka/data
+      # === Single-node constraints ===
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+    networks:
+      - patient-management
+    volumes:
+      - kafka_data:/var/lib/kafka/data
 
 volumes:
-   kafka_data:
+  kafka_data:
 
 networks:
-   patient-management:
-      name: patient-management
-      driver: bridge
+  patient-management:
+    name: patient-management
+    driver: bridge
+
