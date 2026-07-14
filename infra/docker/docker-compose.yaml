@@ -48,6 +48,8 @@ services:
 
    api-gateway:
       image: api-gateway:latest
+      env_file:
+         - .env.production
       ports:
          - "4004:4004"
       #      depends_on:
@@ -98,27 +100,22 @@ services:
          - "9092:9092"
          - "9094:9094"
       environment:
-         # === KRaft identity ===
          KAFKA_NODE_ID: 1
          KAFKA_PROCESS_ROLES: broker,controller
          KAFKA_CLUSTER_ID: cmjvw3drc00002e6jmyi2t8wc
          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
 
-         # === Listeners ===
          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
-         # === Storage ===
          KAFKA_LOG_DIRS: /var/lib/kafka/data
 
-         # === Single-node constraints ===
          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-
       networks:
          - patient-management
       volumes:
@@ -131,4 +128,3 @@ networks:
    patient-management:
       name: patient-management
       driver: bridge
-
